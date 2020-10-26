@@ -7,4 +7,4 @@ To run this code, adjust the necessary SBATCH lines (including the first and fou
 You can follow the progress of the job using the command
 `squeue <username>` where <username> refers to your userID on the machine
 
-This will submit the job on Agave. (Of course, if you're not using Agave you'll need to made the adjustments depending on which job scheduler you use, etc.
+This will submit the job on Agave.     Of course, if you're not using Agave you'll need to made the adjustments depending on which job scheduler you use, etc.
