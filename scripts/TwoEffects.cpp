@@ -77,7 +77,7 @@ BELOW THIS (itera) NEEDS TO BE SET TO DETERMINE THE RANGE OF POPULATION SIZES TO
 #include 	<sys/types.h>
 #include	<stdlib.h>
 #include	<time.h>
-
+#include	<string.h>
 
 
 
@@ -475,11 +475,26 @@ S170:
 /* point to the output file */
 
 FILE *stream;
+char filename[100];
 
 
-void main()
+void main(int argc, char *argv[])
 {
 
+    int f0, f1; 
+
+    if (argc > 1)
+    {
+        f0 = atoi(argv[1]);
+        f1=f0;
+        sprintf(filename, "dataout_%d.txt", f0);    
+    }
+    else
+    {
+        f0 = 1;
+        f1 = 21;    
+        sprintf(filename, "dataout.txt");    
+    }
 
 
 
@@ -699,9 +714,9 @@ gmaxrate = (((double)ellmin) * scomin) + (((double)ellmaj) * scomaj);
 
 
 
-for (itera = 1; itera <= 21; ++itera) {							/* Start iterations over the set of population sizes and mutation rates. */
+for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set of population sizes and mutation rates. */
 		
-	stream=fopen("dataout.txt", "w");
+    stream=fopen(filename, "a");
 	
 
 	ne = efpopn[itera];											/* effective population size */
@@ -1073,7 +1088,7 @@ for (itera = 1; itera <= 21; ++itera) {							/* Start iterations over the set o
 
 				
 				if (tcount > tintprint) {
-					  printf("%9d, %9d, %7.6f, %10.6Lf, %7.6Lf, %6d, %4d, %4d, %6d, %4d, %4d, %10.4Lf, %7.4Lf\n", (ne*kfac), tint, (totw / ((long double)tint)), (grandmeanigmin / ((double)ellmin)), (grandmeanigmaj / ((double)ellmaj)),
+					printf("%9d, %9d, %7.6f, %10.6f, %7.6f, %6d, %4d, %4d, %6d, %4d, %4d, %10.4f, %7.4f\n", (ne*kfac), tint, (totw / ((long double)tint)), (grandmeanigmin / ((double)ellmin)), (grandmeanigmaj / ((double)ellmaj)),
 						newlowmin, newhighmin, (newhighmin - newlowmin), newlowmaj, newhighmaj, (newhighmaj - newlowmaj), powl(varigmin, 0.5), powl(varigmaj, 0.5));
 					
 					tcount = 0; }
@@ -1112,7 +1127,7 @@ for (itera = 1; itera <= 21; ++itera) {							/* Start iterations over the set o
 	neestimate = scalef[itera] * meanminhet / (4.0 * u01 * u10 / (u01 + u10));
 
 
-	fprintf(stream, " %11d, %11d, %11d,, %12.11Lf, %12.11Lf, %3.2Lf,, %12.11Lf, %12.11Lf ,,  %9d ,, %11d, %11d, %17.0Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf,, %12.11Lf, %12.11Lf ,, %12d\n  ",
+	fprintf(stream, " %11d, %11d, %11d,, %12.11f, %12.11f, %3.2f,, %12.11f, %12.11f ,,  %9d ,, %11d, %11d, %17.0f ,, %12.11f, %12.11f ,, %12.11f, %12.11f ,, %12.11f, %12.11f ,, %12.11f, %12.11f ,, %12.11f,, %12.11f, %12.11f ,, %12d\n  ",
 		(ne*kfac), ellmin, ellmaj,
 		(selcomin / ((double)kfac)), (selcomaj / ((double)kfac)), powerexp,
 		(u10 / ((double)kfac)), mutbeta, kfac, 
