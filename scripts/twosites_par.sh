@@ -1,9 +1,9 @@
 #! /bin/bash
 
-#SBATCH -A mlynch11
+#SBATCH -A rraborn
 #SBATCH -p cmecpu1
 #SBATCH -q cmeqos
-#SBATCH -n 1
+#SBATCH -n 19
 #SBATCH -t 0-4:00
 
 module load intel/2019.4
