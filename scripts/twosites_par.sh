@@ -3,7 +3,7 @@
 #SBATCH -A rraborn
 #SBATCH -p cmecpu1
 #SBATCH -q cmeqos
-#SBATCH -n 19
+#SBATCH -n 1
 #SBATCH -t 0-4:00
 
 module load intel/2019.4
