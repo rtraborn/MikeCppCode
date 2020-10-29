@@ -8,6 +8,5 @@
 
 module load intel/2019.4
 
-echo "Running the script"
-
-./twosites
+echo "Running the script in parallel"
+./twoeffects $SLURM_ARRAY_TASK_ID

@@ -55,20 +55,18 @@ THE LOOP IMMEDIATELY BELOW THESE ARRAYS (itera) NEEDS TO BE SET TO DETERMINE THE
 
 #define mutb		1.0						/* ratio of beneficial to deleterious mutation rates, locus B */
 
-#define scoa		0.000001					/* selection coefficient against aB (positive if deleterious) */
+#define scoa		0.000001				/* selection coefficient against aB (positive if deleterious) */
 
-#define scob		0.000001					/* selection coefficient against Ab (positive if deleterious) */
+#define scob		0.000001				/* selection coefficient against Ab (positive if deleterious) */
 
 #define scoab		0.000					/* selection coefficient in favor of AB (positive if advantageous) */
 
-#define neratio		1.00						/* ratio of Ne at locus B to that at locus A (array in program is for locus A, so this should be <= 1.0, with B having the smaller Ne, as in an organelle genome) */
+#define neratio		1.00					/* ratio of Ne at locus B to that at locus A (array in program is for locus A, so this should be <= 1.0, with B having the smaller Ne, as in an organelle genome) */
 
 #define recr		0.0						/* recombination rate: recr = 0.5 is free recombination. */
 
 
-#define xinc		25						/* statistics to be recorded every ne/xinc generations */
-
-#define ngens		600000000				/* number of sampling increments in run; each increment is (ne/10) generations */
+#define xinc		10						/* statistics to be recorded every ne/xinc generations */
 
 #define burnin		100000					/* number of initial burn-in sampling increments, ignored in the statistics */
 
@@ -526,7 +524,7 @@ char filename[100];
 
 	long igen;												/* generation counter */
 
-	long tint;												/* interval number for statistics */
+	long double tint;												/* interval number for statistics */
 
 	long nea, neb, nex;										/* effective population sizes */
 
@@ -538,8 +536,11 @@ char filename[100];
 
 	long efpopn[40];										/* effective population sizes at locus A to run -- NOTE THESE ARE SCALED DOWN ACCORDING TO SCALEF TO INCREASE RUN SPEED */
 	long scalef[40];											/* SCALING FACTORS FOR SPEEDING UP RUNS */
+    long double rlng[40];
 
-	long itera;												/* counter for population-size iterations */
+    long double ngens;                                             /* time iterations in run */
+
+	int itera;												/* counter for population-size iterations */
 
 	long increment;											/* increment between surveys */
 	long tcount;											/* counter for printing to screen to monitor simulation progress */
@@ -644,10 +645,39 @@ char filename[100];
 	scalef[1] = 1;
 
 
+	/* Number of sampling increments in run; each increment is (ne/10) generations */
+
+	rlng[19] = 50000000.0;
+	rlng[18] = 50000000.0;
+	rlng[17] = 100000000.0;
+	rlng[16] = 100000000.0;
+	rlng[15] = 100000000.0;
+	rlng[14] = 200000000.0;
+	rlng[13] = 200000000.0;
+	rlng[12] = 300000000.0;
+	rlng[11] = 300000000.0;
+	rlng[10] = 300000000.0;
+	rlng[9] = 400000000.0;
+	rlng[8] = 400000000.0;
+	rlng[7] = 400000000.0;
+	rlng[6] = 500000000.0;
+	rlng[5] = 500000000.0;
+	rlng[4] = 500000000.0;
+	rlng[3] = 600000000.0;
+	rlng[2] = 600000000.0;
+	rlng[1] = 600000000.0;
+
+
+
 
 for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set of population sizes and mutation rates. */
         
         stream=fopen(filename, "a");
+
+        /* Set the run length. */
+        
+        ngens = rlng[itera];
+
 
 
 		/* Set the initial population-genetic parameters. */
@@ -715,7 +745,7 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 
 		igen = 0;
 		tcount = 0;
-		tint = 0;
+		tint = 0.0;
 		counter = 0;
 		totw = 0.0;
 
@@ -938,7 +968,7 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 							sumfreqab[iga][igb] = sumfreqab[iga][igb] + p0[iga][igb];} 	}
 
 					totw = totw + meanw;
-					tint = tint + 1;
+					tint = tint + 1.0;
 					tcount = tcount + 1;
 
 
@@ -946,9 +976,9 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 
 						for (iga = 0; iga <= 1; ++iga) {									/* cumulative mean genotypic frequencies */
 							for (igb = 0; igb <= 1; ++igb) {
-								mean[iga][igb] = sumfreqab[iga][igb] / ((long double)tint); } }
+								mean[iga][igb] = sumfreqab[iga][igb] / tint; } }
 
-						printf("%9d, %9d, %9d, %10d, %9.5Lf, %9.5Lf, %6.5Lf, %6.5Lf, %6.5Lf, %9.5Lf, %6.5Lf \n", (nea*kfac), (neb*kfac), (nex*kfac), tint, (totw / ((long double)tint)),
+						printf("%9d, %9d, %9d, %10.0Lf, %9.5Lf, %9.5Lf, %6.5Lf, %6.5Lf, %6.5Lf, %9.5Lf, %6.5Lf \n", (nea*kfac), (neb*kfac), (nex*kfac), tint, (totw / tint),
 							mean[1][1], mean[1][0], mean[0][1], mean[0][0], (mean[1][1] + mean[1][0]), (mean[1][1] + mean[0][1]));
 
 						tcount = 0;
@@ -961,7 +991,7 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 
 		/* Calculate the final statistics. */
 		
-		grandmeanw = totw / ((long double)tint);								/* mean fitness */
+		grandmeanw = totw / tint;								/* mean fitness */
 
 		for (iga = 1; iga <= 4; ++iga) {										/* mean transtion times from one fixed state to another */
 			for (igb = 1; igb <= 4; ++igb) {
@@ -987,10 +1017,10 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 
 		/* Print the output. */
 
-		fprintf(stream, " %11d, %11d, %11d ,, %12.11f, %12.11f, %4.3f, %4.3f ,, %4.3f,, %12.11f, %12.11f, %12.11f ,,  %6d ,, %13d, %13d, %17.0f ,, %12.11Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf, %12.11Lf, %12.11Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf \n  ",
+		fprintf(stream, " %11d, %11d, %11d ,, %12.11f, %12.11f, %4.3f, %4.3f ,, %4.3f,, %12.11f, %12.11f, %12.11f ,,  %6d ,, %17.0Lf, %13d, %17.0Lf ,, %12.11Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf, %12.11Lf, %12.11Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf \n  ",
 			(nea*kfac), (neb*kfac), (nex*kfac),
 			ua, ub, muta, mutb, recr, scoa, scob, scoab,
-			kfac, ngens, burnin, (((double)tint)*((double)increment)),
+			kfac, ngens, burnin, (tint*((long double)increment)),
 			grandmeanw,
 			(mean[1][1] + mean[1][0]), (mean[1][1] + mean[0][1]), 
 			mean[1][1], mean[1][0], mean[0][1], mean[0][0],

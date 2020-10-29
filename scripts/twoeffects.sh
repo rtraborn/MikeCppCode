@@ -10,4 +10,4 @@ module load intel/2019.4
 
 echo "Running the script"
 
-./twosites
+./twoeffects
