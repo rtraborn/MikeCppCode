@@ -18,3 +18,6 @@ You can follow the progress of the job using the command
 
 This will submit the job on Agave.
 Of course, if you're not using Agave you'll need to made the adjustments depending on which job scheduler you use, etc.
+
+#### To compile TwoEffects_Gil.cpp, please use the following flags:
+`icc -o twoeff TwoEffects_Gil.cpp -lm -lgsl`
