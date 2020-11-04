@@ -66,7 +66,7 @@ THE LOOP IMMEDIATELY BELOW THESE ARRAYS (itera) NEEDS TO BE SET TO DETERMINE THE
 #define recr		0.0						/* recombination rate: recr = 0.5 is free recombination. */
 
 
-#define xinc		10						/* statistics to be recorded every ne/xinc generations */
+#define xinc		25						/* statistics to be recorded every ne/xinc generations */
 
 #define burnin		100000					/* number of initial burn-in sampling increments, ignored in the statistics */
 
@@ -80,6 +80,12 @@ THE LOOP IMMEDIATELY BELOW THESE ARRAYS (itera) NEEDS TO BE SET TO DETERMINE THE
 #include	<stdlib.h>
 #include	<time.h>
 #include    <string.h> 
+#include    <gsl/gsl_rng.h>
+#include    <gsl/gsl_randist.h>
+
+
+
+
 
 
 /* ********************************************************************************************************** */
@@ -496,6 +502,30 @@ char filename[100];
  }  
 
 
+
+
+
+
+ static gsl_rng* rand_new;
+ static gsl_rng_type * T;
+ gsl_rng_env_setup();
+ if (!rand_new)
+ {
+	 rand_new = gsl_rng_alloc(gsl_rng_taus2);
+	 gsl_rng_set(rand_new, time(NULL));
+ }
+
+
+
+
+
+
+
+
+
+
+
+
 	/* NOTE: The seed variables can have values between:    0 <= IJ <= 31328 */
 	/*                                                      0 <= KL <= 30081 */
 	/* Default random seeds for the ranmar() random number generator:        */
@@ -524,21 +554,21 @@ char filename[100];
 
 	long igen;												/* generation counter */
 
-	long double tint;												/* interval number for statistics */
+	double tint;												/* interval number for statistics */
 
 	long nea, neb, nex;										/* effective population sizes */
 
-	long double u10a, u01a, u10b, u01b;						/* mutation rates; 01 = beneficial, 10 = deleterious */
+	double u10a, u01a, u10b, u01b;						/* mutation rates; 01 = beneficial, 10 = deleterious */
 
-	long double selcoa, selcob, selcoab;					/* selection coefficients */
+	double selcoa, selcob, selcoab;					/* selection coefficients */
 
 	long kfac;												/* scaling factor for speeding up runs, from scalef[] */
 
 	long efpopn[40];										/* effective population sizes at locus A to run -- NOTE THESE ARE SCALED DOWN ACCORDING TO SCALEF TO INCREASE RUN SPEED */
 	long scalef[40];											/* SCALING FACTORS FOR SPEEDING UP RUNS */
-    long double rlng[40];
+    double rlng[40];
 
-    long double ngens;                                             /* time iterations in run */
+    double ngens;                                             /* time iterations in run */
 
 	int itera;												/* counter for population-size iterations */
 
@@ -546,51 +576,54 @@ char filename[100];
 	long tcount;											/* counter for printing to screen to monitor simulation progress */
 	long counter;											/* initial number of surveys to be skipped */
 
-	long double meanfit;									/* mean fitness */
+	double meanfit;									/* mean fitness */
 
-	long double ldiseq;										/* linkage disequilibrium */
+	double ldiseq;										/* linkage disequilibrium */
 
-	long double wfit[2][2];									/* genotypic fitnesses */
+	double wfit[2][2];									/* genotypic fitnesses */
 
-	long double p0[2][2];									/* genotypic frequencies at start of generation */
+	double p0[2][2];									/* genotypic frequencies at start of generation */
 
-	long double psel[2][2];									/* after selection */
+	double psel[2][2];									/* after selection */
 
-	long double pmutm[2][2];								/* after mutation */
+	double pmutm[2][2];								/* after mutation */
 
-	long double prec[2][2];									/* after recombination */
+	double prec[2][2];									/* after recombination */
 
-	long double pgtypexp[2][2];								/* expected frequencies prior to first epsisode of random drift */
+	double pgtypexp[2][2];								/* expected frequencies prior to first epsisode of random drift */
 
-	long double pnew[2][2];									/* frequencies after 2nd sampling episode */
+	double pnew[2][2];									/* frequencies after 2nd sampling episode */
 
-	long double pa1tot, pa0tot;								/* conditional frequencies of A/a alleles */
+	double pa1tot, pa0tot;								/* conditional frequencies of A/a alleles */
 
-	long double sumfreqab[2][2];							/* summations of genotype frequencies*/
+	double sumfreqab[2][2];							/* summations of genotype frequencies*/
 
-	long double totw;										/* summations for grand means and variances */
+	double totw;										/* summations for grand means and variances */
 
-	long double sump;										/* sum of frequencies */
+	double sump;										/* sum of frequencies */
 
-	long double pp;											/* probability associated with the binomial for drift */
+	double pp;                                          	/* probability associated with the binomial for drift */
+	
 	long ntot;												/* integer associated with the binomial for drift */
 	long draw;												/* drift drawn from the binomial */
-	long double epoi, rnum;									/* terms for Poisson draws */
+	
+	
+	double epoi, rnum;									/* terms for Poisson draws */
 
-	long double meanw, grandmeanw;							/* generational mean for fitness */
+	double meanw, grandmeanw;							/* generational mean for fitness */
 
-	long double mean[3][3];									/* mean genotypic frequencies */
+	double mean[3][3];									/* mean genotypic frequencies */
 
 	int oldfix, newfix;										/* indicators for fixation states */
 
-	long double fixgens, numfix[5][5], genfix[5][5];		/* counters for numbers and times of fixations of different types */
+	double fixgens, numfix[5][5], genfix[5][5];		/* counters for numbers and times of fixations of different types */
 	
-	long double totgens, totratea, totrateb;
+	double totgens, totratea, totrateb;
 
-	long double meanfixtime[5][5];							/* mean fixation times */
-	long double fixrate[5][5];								/* mean fixation rates */
+	double meanfixtime[5][5];							/* mean fixation times */
+	double fixrate[5][5];								/* mean fixation rates */
 
-	long double ratea, rateb, neutratea, neutrateb;			/* overall average observed substitution rates and expected netural rates */
+	double ratea, rateb, neutratea, neutrateb;			/* overall average observed substitution rates and expected netural rates */
 
 
 
@@ -627,12 +660,12 @@ char filename[100];
 	scalef[19] = 10000;
 	scalef[18] = 10000;
 	scalef[17] = 10000;
-	scalef[16] = 10000;
-	scalef[15] = 10000;
+	scalef[16] = 1000;
+	scalef[15] = 1000;
 	scalef[14] = 1000;
 	scalef[13] = 1000;
 	scalef[12] = 1000;
-	scalef[11] = 1000;
+	scalef[11] = 100;
 	scalef[10] = 100;
 	scalef[9] = 100;
 	scalef[8] = 100;
@@ -651,21 +684,21 @@ char filename[100];
 	rlng[18] = 50000000.0;
 	rlng[17] = 100000000.0;
 	rlng[16] = 100000000.0;
-	rlng[15] = 100000000.0;
+	rlng[15] = 200000000.0;
 	rlng[14] = 200000000.0;
-	rlng[13] = 200000000.0;
-	rlng[12] = 300000000.0;
-	rlng[11] = 300000000.0;
-	rlng[10] = 300000000.0;
-	rlng[9] = 400000000.0;
-	rlng[8] = 400000000.0;
-	rlng[7] = 400000000.0;
-	rlng[6] = 500000000.0;
-	rlng[5] = 500000000.0;
-	rlng[4] = 500000000.0;
-	rlng[3] = 600000000.0;
-	rlng[2] = 600000000.0;
-	rlng[1] = 600000000.0;
+	rlng[13] = 300000000.0;
+	rlng[12] = 400000000.0;
+	rlng[11] = 400000000.0;
+	rlng[10] = 500000000.0;
+	rlng[9] = 500000000.0;
+	rlng[8] = 500000000.0;
+	rlng[7] = 600000000.0;
+	rlng[6] = 600000000.0;
+	rlng[5] = 600000000.0;
+	rlng[4] = 800000000.0;
+	rlng[3] = 800000000.0;
+	rlng[2] = 800000000.0;
+	rlng[1] = 800000000.0;
 
 
 
@@ -803,6 +836,8 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 
 
 
+
+
 			/* Reset the next generation's expected genotype frequencies, and ensure that they sum to 1.0. */
 
 			sump = prec[1][1] + prec[0][1] + prec[1][0] + prec[0][0];
@@ -825,15 +860,16 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 			for (iga = 0; iga <= 1; ++iga) {
 				for (igb = 0; igb <= 1; ++igb) {
 
-					if ((pgtypexp[iga][igb] > 0.0) && (ntot > 0))  {
+					if ((pgtypexp[iga][igb] > 0.0) && (ntot > 0) && (sump < 1.0))  {
 						pp = pgtypexp[iga][igb] / (1.0 - sump);												/* this is the remaining frequency to sample */
 
-						if (pp >= 1.0000000000000) {														/* if remaining frequency = 1.0, then numerator is equal to remaining sample */
+
+						if (pp >= 1.0000000000000) {														
 							draw = ntot;
 							p0[iga][igb] = ((double)draw) / ((double)nea);
 						}
-
-						else if (pp < 0.0000001) {															/* if expected frequency is very small, just draw from a Poisson */
+						
+						else if (pp < 0.0000001) {															
 							draw = -1;
 							epoi = exp(-pp*((double)ntot));
 							rnum = 1.0;
@@ -844,7 +880,7 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 							p0[iga][igb] = ((double)draw) / ((double)nea);
 						}
 
-						else if (pp > 0.9999999) {															/* if expected frequency is very high, just draw the minor allele from a Poisson */
+						else if (pp > 0.9999999) {														
 							draw = -1;
 							epoi = exp(-(1.0 - pp)*((double)ntot));
 							rnum = 1.0;
@@ -855,10 +891,11 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 							draw = ntot - draw;
 							p0[iga][igb] = ((double)draw) / ((double)nea);
 						}
-
-						else {																				/* for all other frequencies, draw a binomial based on the remaining frequencies */
-							draw = ignbin(ntot, pp);
+						
+						else { 
+							draw = gsl_ran_binomial_tpe(rand_new, pp, ntot);
 							p0[iga][igb] = ((double)draw) / ((double)nea);
+							
 						}
 
 						ntot = ntot - draw;
@@ -893,7 +930,7 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 					else if (pp == 0.0) {
 						pnew[1][0] = p0[1][0]; 	}
 					else {
-						draw = ignbin(ntot, pp);
+						draw = gsl_ran_binomial_tpe(rand_new, pp, ntot);
 						pnew[1][1] = pa1tot * ((double)draw) / ((double)ntot);
 						pnew[1][0] = pa1tot - pnew[1][1];	}
 				}
@@ -910,7 +947,7 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 					else if (pp == 0.0) {
 						pnew[0][1] = p0[0][1]; 	}
 					else {
-						draw = ignbin(ntot, pp);
+						draw = gsl_ran_binomial_tpe(rand_new, pp, ntot);
 						pnew[0][0] = pa0tot * ((double)draw) / ((double)ntot);
 						pnew[0][1] = pa0tot - pnew[0][0]; 	}
 				}
@@ -921,6 +958,7 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 						if (p0[iga][igb] < 0.0){
 							p0[iga][igb] = 0.0;	}}}
 			}
+
 
 
 
@@ -978,7 +1016,7 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 							for (igb = 0; igb <= 1; ++igb) {
 								mean[iga][igb] = sumfreqab[iga][igb] / tint; } }
 
-						printf("%9d, %9d, %9d, %10.0Lf, %9.5Lf, %9.5Lf, %6.5Lf, %6.5Lf, %6.5Lf, %9.5Lf, %6.5Lf \n", (nea*kfac), (neb*kfac), (nex*kfac), tint, (totw / tint),
+						printf("%9d, %9d, %9d, %10.0f, %9.5f, %9.5f, %6.5f, %6.5f, %6.5f, %9.5f, %6.5f \n", (nea*kfac), (neb*kfac), (nex*kfac), tint, (totw / tint),
 							mean[1][1], mean[1][0], mean[0][1], mean[0][0], (mean[1][1] + mean[1][0]), (mean[1][1] + mean[0][1]));
 
 						tcount = 0;
@@ -1017,10 +1055,10 @@ for (itera = f0; itera <= f1; ++itera){							/* Start iterations over the set o
 
 		/* Print the output. */
 
-		fprintf(stream, " %11d, %11d, %11d ,, %12.11f, %12.11f, %4.3f, %4.3f ,, %4.3f,, %12.11f, %12.11f, %12.11f ,,  %6d ,, %17.0Lf, %13d, %17.0Lf ,, %12.11Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf, %12.11Lf, %12.11Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf,, %12.11Lf, %9.1Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf ,, %12.11Lf, %12.11Lf \n  ",
+		fprintf(stream, " %11d, %11d, %11d ,, %12.11f, %12.11f, %4.3f, %4.3f ,, %4.3f,, %12.11f, %12.11f, %12.11f ,,  %6d ,, %17.0f, %13d, %17.0f ,, %12.11f ,, %12.11f, %12.11f ,, %12.11f, %12.11f, %12.11f, %12.11f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f,, %12.11f, %9.1f ,, %12.11f, %12.11f ,, %12.11f, %12.11f ,, %12.11f, %12.11f \n  ",
 			(nea*kfac), (neb*kfac), (nex*kfac),
 			ua, ub, muta, mutb, recr, scoa, scob, scoab,
-			kfac, ngens, burnin, (tint*((long double)increment)),
+			kfac, ngens, burnin, (tint*((double)increment)),
 			grandmeanw,
 			(mean[1][1] + mean[1][0]), (mean[1][1] + mean[0][1]), 
 			mean[1][1], mean[1][0], mean[0][1], mean[0][0],
